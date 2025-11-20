@@ -317,20 +317,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>1.</td>
-                                <td>Shaun</td>
-                                <td>1500</td>
-                                <td>32</td>
-                                <td>West-Rand</td>
-                            </tr>
-                            <tr>
-                                <td>2.</td>
-                                <td>Steven</td>
-                                <td>1420</td>
-                                <td>28</td>
-                                <td>West-Rand</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -427,9 +413,118 @@
 
                 if (error) throw error;
                 
+                // Add user to Leaderboard table
+                if (data.user) {
+                    await addUserToLeaderboard(data.user);
+                }
+                
                 showSuccess('Account created! Check your email to verify.');
             } catch (error) {
                 showError(error.message);
+            }
+        }
+
+        // Add user to Leaderboard table when account is created
+        async function addUserToLeaderboard(user) {
+            try {
+                const { data, error } = await supabase
+                    .from('leaderboard')
+                    .insert([
+                        {
+                            user_id: user.id,
+                            email: user.email,
+                            wins: 0,
+                            losses: 0,
+                            rating: 1000,
+                            games_played: 0
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+                
+                console.log('User added to leaderboard:', data);
+                return data;
+            } catch (error) {
+                console.error('Error adding user to leaderboard:', error);
+            }
+        }
+
+        // Check if current user is admin
+        async function isCurrentUserAdmin() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return false;
+                
+                const { data, error } = await supabase
+                    .from('admins')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+                
+                return data && !error;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Migrate existing users to Leaderboard table (ADMIN ONLY)
+        async function migrateExistingUsersToLeaderboard() {
+            try {
+                // Check if user is admin
+                const isAdmin = await isCurrentUserAdmin();
+                if (!isAdmin) {
+                    showError('You do not have admin privileges to perform this action.');
+                    return;
+                }
+                
+                showSuccess('Starting migration of existing users...');
+                
+                // Fetch all users from Supabase auth
+                const { data: { users }, error: authError } = await supabase.auth.admin.listUsers();
+                
+                if (authError) throw authError;
+                
+                // Get users already in leaderboard to avoid duplicates
+                const { data: existingLeaderboardUsers, error: leaderboardError } = await supabase
+                    .from('leaderboard')
+                    .select('user_id');
+                
+                if (leaderboardError) throw leaderboardError;
+                
+                const existingUserIds = new Set(existingLeaderboardUsers.map(u => u.user_id));
+                
+                // Filter out users already in leaderboard
+                const usersToAdd = users.filter(user => !existingUserIds.has(user.id));
+                
+                if (usersToAdd.length === 0) {
+                    showSuccess('All users are already in the leaderboard!');
+                    return;
+                }
+                
+                // Insert new users into leaderboard
+                const leaderboardEntries = usersToAdd.map(user => ({
+                    user_id: user.id,
+                    email: user.email,
+                    wins: 0,
+                    losses: 0,
+                    rating: 1000,
+                    games_played: 0
+                }));
+                
+                const { data, error: insertError } = await supabase
+                    .from('leaderboard')
+                    .insert(leaderboardEntries)
+                    .select();
+                
+                if (insertError) throw insertError;
+                
+                showSuccess(`Successfully added ${data.length} users to the leaderboard!`);
+                console.log('Migrated users:', data);
+                return data;
+            } catch (error) {
+                showError(`Migration error: ${error.message}`);
+                console.error('Error migrating users:', error);
             }
         }
 
