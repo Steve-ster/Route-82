@@ -23,7 +23,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: darkgreen;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -91,7 +91,7 @@
         button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: gray;
             color: white;
             border: none;
             border-radius: 8px;
@@ -155,6 +155,7 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            margin-top: 20px;
         }
 
         .user-info p {
@@ -208,6 +209,55 @@
             color: #718096;
             font-size: 14px;
         }
+
+        .border {
+            border: solid;
+            border-color: rgb(113, 111, 111); 
+            padding: 5px;
+        }
+
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        thead tr {
+            background-color: #e2e8f0; /* light grey like Excel header */
+            font-weight: bold;
+        }
+
+        td, th {
+            border: 1px solid #cbd5e0; /* soft grid lines */
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc; /* zebra rows like Excel */
+        }
+
+        /* Desktop: no scrolling */
+        #table {
+            overflow-x: visible;
+        }
+
+        /* Mobile: enable horizontal scrolling */
+        @media (max-width: 768px) {
+            #table {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            min-width: 500px;
+        }
+    }
+
+
+
     </style>
 </head>
 <body>
@@ -220,7 +270,7 @@
 
         <!-- Authentication Section -->
         <div id="authSection" class="auth-section">
-            <h1>🎱 Pool Tournaments</h1>
+            <h1>🎱 Welcome to the official Route-82 Championship app</h1>
             <p class="subtitle">Sign in to manage your tournaments</p>
             
             <div id="errorMsg" class="error"></div>
@@ -242,8 +292,56 @@
 
         <!-- Main App Section -->
         <div id="appSection" class="app-section">
-            <h1>🎱 Pool Tournaments</h1>
-            <p class="subtitle">Manage your tournaments</p>
+            <h1>🎱 Welcome to the official Route-82 Championship app</h1>
+            <p class="subtitle">This is your dashboard</p>
+
+            <div class="tournament-list">
+                <h2 style="margin-bottom: 15px; color: #1a202c;">Tournaments:</h2>
+                <div id="tournamentsList">
+                    <p style="color: #718096; text-align: center; padding: 20px;">No available tournaments</p>
+                </div>
+            </div>
+
+            <div class="leaderboard">
+                <h2 style="margin-bottom: 15px; color: #1a202c;">Leaderboard:</h2>
+
+                <div id="table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>Pos.</td>
+                                <td>Player</td>
+                                <td>Rating</td>
+                                <td>Wins</td>
+                                <td>Region</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1.</td>
+                                <td>Shaun</td>
+                                <td>1500</td>
+                                <td>32</td>
+                                <td>West-Rand</td>
+                            </tr>
+                            <tr>
+                                <td>2.</td>
+                                <td>Steven</td>
+                                <td>1420</td>
+                                <td>28</td>
+                                <td>West-Rand</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <br>
+            <br>
+
+            <div class="actions">
+                <button id="createTournamentBtn">Create New Tournament</button>
+            </div>
 
             <div class="user-info">
                 <p><strong>Logged in as:</strong></p>
@@ -251,13 +349,6 @@
             </div>
 
             <button class="secondary-btn" id="logoutBtn">Sign Out</button>
-
-            <div class="tournament-list">
-                <h2 style="margin-bottom: 15px; color: #1a202c;">Your Tournaments</h2>
-                <div id="tournamentsList">
-                    <p style="color: #718096; text-align: center; padding: 20px;">No tournaments yet. Start coding to add features!</p>
-                </div>
-            </div>
         </div>
     </div>
 
