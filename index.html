@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a202c">
+    <title>Pool Tournament App</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Pool Tournaments">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .auth-section, .app-section {
+            display: none;
+        }
+
+        .auth-section.active, .app-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 10px;
+        }
+
+        .secondary-btn:hover {
+            background: #f7fafc;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .user-info {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .user-info p {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .user-info strong {
+            color: #1a202c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tournament-list {
+            margin-top: 20px;
+        }
+
+        .tournament-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .tournament-item h3 {
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .tournament-item p {
+            color: #718096;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-section">
+            <h1>🎱 Pool Tournaments</h1>
+            <p class="subtitle">Sign in to manage your tournaments</p>
+            
+            <div id="errorMsg" class="error"></div>
+            <div id="successMsg" class="success"></div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button id="loginBtn">Sign In</button>
+            <button class="secondary-btn" id="signupBtn">Create Account</button>
+        </div>
+
+        <!-- Main App Section -->
+        <div id="appSection" class="app-section">
+            <h1>🎱 Pool Tournaments</h1>
+            <p class="subtitle">Manage your tournaments</p>
+
+            <div class="user-info">
+                <p><strong>Logged in as:</strong></p>
+                <p id="userEmail"></p>
+            </div>
+
+            <button class="secondary-btn" id="logoutBtn">Sign Out</button>
+
+            <div class="tournament-list">
+                <h2 style="margin-bottom: 15px; color: #1a202c;">Your Tournaments</h2>
+                <div id="tournamentsList">
+                    <p style="color: #718096; text-align: center; padding: 20px;">No tournaments yet. Start coding to add features!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // ============================================
+        // SUPABASE CONFIGURATION
+        // ============================================
+        // TODO: Replace these with your actual Supabase credentials
+        const SUPABASE_URL = 'https://awsbryqbdvzcmawuesdq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3c2JyeXFiZHZ6Y21hd3Vlc2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2MzcwNDYsImV4cCI6MjA3OTIxMzA0Nn0.AGGDzB52qvX32-hiW-QqwC_FFwPf4Z2CQyYK4OIkA7A';
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        const loading = document.getElementById('loading');
+        const authSection = document.getElementById('authSection');
+        const appSection = document.getElementById('appSection');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userEmailDisplay = document.getElementById('userEmail');
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+            successMsg.classList.remove('show');
+            setTimeout(() => errorMsg.classList.remove('show'), 5000);
+        }
+
+        function showSuccess(message) {
+            successMsg.textContent = message;
+            successMsg.classList.add('show');
+            errorMsg.classList.remove('show');
+            setTimeout(() => successMsg.classList.remove('show'), 5000);
+        }
+
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+        }
+
+        function showAuth() {
+            loading.style.display = 'none';
+            authSection.classList.add('active');
+            appSection.classList.remove('active');
+        }
+
+        function showApp(user) {
+            loading.style.display = 'none';
+            authSection.classList.remove('active');
+            appSection.classList.add('active');
+            userEmailDisplay.textContent = user.email;
+        }
+
+        // ============================================
+        // AUTHENTICATION FUNCTIONS
+        // ============================================
+        async function signUp(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+                
+                showSuccess('Account created! Check your email to verify.');
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function signIn(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+                
+                showSuccess('Signed in successfully!');
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function signOut() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // ============================================
+        // DATABASE FUNCTIONS (EXAMPLES)
+        // ============================================
+        
+        // Example: Fetch tournaments from database
+        async function fetchTournaments() {
+            try {
+                const { data, error } = await supabase
+                    .from('tournaments')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                // TODO: Display tournaments in your UI
+                console.log('Tournaments:', data);
+                return data;
+            } catch (error) {
+                console.error('Error fetching tournaments:', error);
+                return [];
+            }
+        }
+
+        // Example: Create a new tournament
+        async function createTournament(name, description) {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                const { data, error } = await supabase
+                    .from('tournaments')
+                    .insert([
+                        { 
+                            name: name, 
+                            description: description,
+                            user_id: user.id 
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+                
+                console.log('Tournament created:', data);
+                return data;
+            } catch (error) {
+                console.error('Error creating tournament:', error);
+            }
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                showError('Please enter email and password');
+                return;
+            }
+            
+            await signIn(email, password);
+        });
+
+        signupBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                showError('Please enter email and password');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+            
+            await signUp(email, password);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut();
+        });
+
+        // ============================================
+        // AUTH STATE LISTENER
+        // ============================================
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                showApp(session.user);
+                // Load user data here
+                fetchTournaments();
+            } else {
+                showAuth();
+            }
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        async function init() {
+            showLoading(true);
+            
+            // Check if user is already logged in
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session?.user) {
+                showApp(session.user);
+                fetchTournaments();
+            } else {
+                showAuth();
+            }
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
