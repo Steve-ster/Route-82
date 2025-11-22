@@ -1,6 +1,6 @@
 {
-  "name": "Pool Tournament App",
-  "short_name": "Pool Tourney",
+  "name": "Route-82-Championships",
+  "short_name": "Route-82",
   "description": "Manage pool tournaments with friends",
   "start_url": "/",
   "display": "standalone",

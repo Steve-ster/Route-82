@@ -88,6 +88,22 @@
             border-color: #667eea;
         }
 
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         button {
             width: 100%;
             padding: 14px;
@@ -277,8 +293,23 @@
             <div id="successMsg" class="success"></div>
 
             <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" placeholder="John Doe" required>
+            </div>
+
+            <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="region">Region</label>
+                <select id="region" required>
+                    <option value="">-- Select Region --</option>
+                    <option value="West-Rand">West-Rand</option>
+                    <option value="Meyerton">Meyerton</option>
+                    <option value="Alberton">Alberton</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -360,7 +391,9 @@
         const appSection = document.getElementById('appSection');
         const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
+        const fullNameInput = document.getElementById('fullName');
         const emailInput = document.getElementById('email');
+        const regionInput = document.getElementById('region');
         const passwordInput = document.getElementById('password');
         const loginBtn = document.getElementById('loginBtn');
         const signupBtn = document.getElementById('signupBtn');
@@ -427,12 +460,17 @@
         // Add user to Leaderboard table when account is created
         async function addUserToLeaderboard(user) {
             try {
+                const fullName = fullNameInput.value.trim();
+                const region = regionInput.value;
+
                 const { data, error } = await supabase
                     .from('leaderboard')
                     .insert([
                         {
                             user_id: user.id,
                             email: user.email,
+                            full_name: fullName,
+                            region: region,
                             wins: 0,
                             losses: 0,
                             rating: 1000,
@@ -556,6 +594,50 @@
         // DATABASE FUNCTIONS (EXAMPLES)
         // ============================================
         
+        // Fetch leaderboard data and display in table
+        async function fetchLeaderboard() {
+            try {
+                const { data, error } = await supabase
+                    .from('leaderboard')
+                    .select('*')
+                    .order('rating', { ascending: false });
+
+                if (error) throw error;
+                
+                displayLeaderboard(data);
+                console.log('Leaderboard data:', data);
+                return data;
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                return [];
+            }
+        }
+
+        // Display leaderboard in the table
+        function displayLeaderboard(users) {
+            const tbody = document.querySelector('table tbody');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            users.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${user.full_name || 'N/A'}</td>
+                    <td>${user.rating}</td>
+                    <td>${user.wins}</td>
+                    <td>${user.region || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // If no users, show a message
+            if (users.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="5" style="text-align: center; color: #718096;">No players yet</td>';
+                tbody.appendChild(row);
+            }
+        }
+        
         // Example: Fetch tournaments from database
         async function fetchTournaments() {
             try {
@@ -616,11 +698,13 @@
         });
 
         signupBtn.addEventListener('click', async () => {
+            const fullName = fullNameInput.value.trim();
             const email = emailInput.value.trim();
+            const region = regionInput.value;
             const password = passwordInput.value;
             
-            if (!email || !password) {
-                showError('Please enter email and password');
+            if (!fullName || !email || !region || !password) {
+                showError('Please fill in all fields');
                 return;
             }
             
@@ -644,6 +728,7 @@
                 showApp(session.user);
                 // Load user data here
                 fetchTournaments();
+                fetchLeaderboard();
             } else {
                 showAuth();
             }
@@ -661,6 +746,7 @@
             if (session?.user) {
                 showApp(session.user);
                 fetchTournaments();
+                fetchLeaderboard();
             } else {
                 showAuth();
             }
